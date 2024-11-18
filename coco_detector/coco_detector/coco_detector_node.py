@@ -84,7 +84,7 @@ class CocoDetectorNode(Node):
             #detection_model.FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.DEFAULT.meta["categories"]
         #self.model.eval()
         
-        self.model = YOLO("custom_yolov8x.pt")
+        self.model = YOLO("yolov8x.pt")
         
         
         self.get_logger().info("Node has started.")
