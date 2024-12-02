@@ -11,7 +11,7 @@ from vosk import Model, KaldiRecognizer
 class VoiceCommandNode(Node):
     def __init__(self):
         super().__init__('voice_command_node')
-        self.model_path = "./model/vosk-model-en-us-0.22/"
+        self.model_path = "./vosk-model-small-en-us-0.15/"
         self.model = Model(self.model_path)
         self.recognizer = KaldiRecognizer(self.model, 16000)
         self.audio = pyaudio.PyAudio()
