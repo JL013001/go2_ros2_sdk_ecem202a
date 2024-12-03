@@ -85,13 +85,13 @@ class CocoDetectorNode(Node):
             #detection_model.FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.DEFAULT.meta["categories"]
         #self.model.eval()
         
-        self.model = YOLOWorld("yolov8s-worldv2.pt")
-        self.model.set_classes(["person", "bus"])
+        self.model = None
+        #self.model.set_classes(["person", "bus"])
         self.model_initialized = False
         
         self.get_logger().info("Node has started.")
         
-        #camera_info_msg = self.yaml_to_CameraInfo("/root/ost.yaml")
+        camera_info_msg = self.yaml_to_CameraInfo("/root/ost.yaml")
         
         """
         imageR = message_filters.Subscriber(self, Image, "/go2_camera/color/image")
@@ -112,19 +112,19 @@ class CocoDetectorNode(Node):
             self.point_callback,
             qos_profile)
 
-        # subcription to the 'command_topic'
-        # self.create_subscription(
-        #     String,  
-        #     "command_topic", 
-        #     self.command_callback, 
-        #     qos_profile)
+        subcription to the 'command_topic'
+        self.create_subscription(
+            String,  
+            "command_topic", 
+            self.command_callback, 
+            qos_profile)
         
-        # self.tf_buffer = Buffer()
-        # self.tf_listener = TransformListener(self.tf_buffer, self)
-        # self.cam = image_geometry.PinholeCameraModel()
-        # self.cam.fromCameraInfo(camera_info_msg)
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+        self.cam = image_geometry.PinholeCameraModel()
+        self.cam.fromCameraInfo(camera_info_msg)
         
-        # self.marker_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
+        self.marker_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
 
     def mobilenet_to_ros2(self, detection, header):
         """Converts a Detection tuple(label, bbox, score) to a ROS2 Detection2D message."""
@@ -464,7 +464,7 @@ class CocoDetectorNode(Node):
             self.get_logger().info(f"Received command: {msg.data}")
         
             try:
-                self.model = YOLOWorld("yolov8s-world.pt") # Initialize the model
+                self.model = YOLOWorld("yolov8s-worldv2.pt") # Initialize the model
                 self.model.set_classes([msg.data])
                 self.model_initialized = True
                 self.get_logger().info("YOLO model initialized successfully.")
