@@ -174,26 +174,28 @@ class CocoDetectorNode(Node):
             mobilenet_detections["boxes"],
             mobilenet_detections["scores"]) if score >= self.detection_threshold]
         '''
-        results = self.model.predict(cv_image)
-        #pdb.set_trace()
-        filtered_detections = []
-        image_plot = []
-        for result in results:
-            self.class_labels = result.names
-            image_plot = result.plot()
 
-            filtered_detections = [Detection(int(label_id), box, score) for label_id, box, score in
-                zip(result.boxes.cls,
-                result.boxes.xyxy,
-                result.boxes.conf) if score >= self.detection_threshold]
+        if self.model is not None:
+            results = self.model.predict(cv_image)
+            #pdb.set_trace()
+            filtered_detections = []
+            image_plot = []
+            for result in results:
+                self.class_labels = result.names
+                image_plot = result.plot()
 
-        detection_array = Detection2DArray()
-        detection_array.header = msg.header
-        detection_array.detections = \
-            [self.mobilenet_to_ros2(detection, msg.header) for detection in filtered_detections]
-        self.detected_objects_publisher.publish(detection_array)
-        if self.annotated_image_publisher is not None:
-            self.publish_annotated_image([], msg.header, image_plot.copy().transpose((2, 0, 1)))
+                filtered_detections = [Detection(int(label_id), box, score) for label_id, box, score in
+                    zip(result.boxes.cls,
+                    result.boxes.xyxy,
+                    result.boxes.conf) if score >= self.detection_threshold]
+
+            detection_array = Detection2DArray()
+            detection_array.header = msg.header
+            detection_array.detections = \
+                [self.mobilenet_to_ros2(detection, msg.header) for detection in filtered_detections]
+            self.detected_objects_publisher.publish(detection_array)
+            if self.annotated_image_publisher is not None:
+                self.publish_annotated_image([], msg.header, image_plot.copy().transpose((2, 0, 1)))
 
     def yaml_to_CameraInfo(self, yaml_fname):
         """
@@ -302,161 +304,162 @@ class CocoDetectorNode(Node):
         cv_image = cv_image1.copy()
         self.cam.rectifyImage(cv_image1, cv_image)
         
-        results = self.model.predict(cv_image)
-        #pdb.set_trace()
-        filtered_detections = []
-        image_plot = []
-        for result in results:
-            self.class_labels = result.names
-            image_plot = result.plot()
+        if self.model is not None:
+            results = self.model.predict(cv_image)
+            #pdb.set_trace()
+            filtered_detections = []
+            image_plot = []
+            for result in results:
+                self.class_labels = result.names
+                image_plot = result.plot()
 
-            filtered_detections = [Detection(int(label_id), box, score) for label_id, box, score in
-                zip(result.boxes.cls,
-                result.boxes.xyxy,
-                result.boxes.conf) if score >= self.detection_threshold]
+                filtered_detections = [Detection(int(label_id), box, score) for label_id, box, score in
+                    zip(result.boxes.cls,
+                    result.boxes.xyxy,
+                    result.boxes.conf) if score >= self.detection_threshold]
 
-        detection_array = Detection2DArray()
-        detection_array.header = imageR.header
-        detection_array.detections = \
-            [self.mobilenet_to_ros2(detection, imageR.header) for detection in filtered_detections]
+            detection_array = Detection2DArray()
+            detection_array.header = imageR.header
+            detection_array.detections = \
+                [self.mobilenet_to_ros2(detection, imageR.header) for detection in filtered_detections]
         
         
         
-        time_taken = time.time() - time_start
-        self.get_logger().info(
-                f'Time taken1: {time_taken}')
-        # walk through list of points and transform each point one by one
-        middle_point = []
+            time_taken = time.time() - time_start
+            self.get_logger().info(
+                    f'Time taken1: {time_taken}')
+            # walk through list of points and transform each point one by one
+            middle_point = []
         
-        vals = pc2.read_points_numpy(self.pointcloudR, field_names=('x', 'y', 'z'))
-        vals = np.hstack((vals, np.atleast_2d(np.ones(vals.shape[0])).T))
-        transformed_points = self.transform_point(t, vals)
+            vals = pc2.read_points_numpy(self.pointcloudR, field_names=('x', 'y', 'z'))
+            vals = np.hstack((vals, np.atleast_2d(np.ones(vals.shape[0])).T))
+            transformed_points = self.transform_point(t, vals)
 
-        transformed_points = transformed_points[transformed_points[:,2] > 0]
+            transformed_points = transformed_points[transformed_points[:,2] > 0]
         
-        transformed_pixels = self.project_points(transformed_points)
-        
-
-        circles = []
-        circles_color = []
-        camera_points = []
-        #for x, y, z, intensity in pc2.read_points(self.pointcloudR, field_names=('x', 'y', 'z', 'intensity')):
-        for pixel_idx,pixel in enumerate(transformed_pixels):
+            transformed_pixels = self.project_points(transformed_points)
         
 
-            #pt = Point()
-            #pt.x, pt.y, pt.z = float(x), float(y), float(z)
-            #new_pt = self.transform_point(t, pt)
-            #new_points.append((new_pt.x, new_pt.y, new_pt.z))
-            new_pt = Point()
+            circles = []
+            circles_color = []
+            camera_points = []
+            #for x, y, z, intensity in pc2.read_points(self.pointcloudR, field_names=('x', 'y', 'z', 'intensity')):
+            for pixel_idx,pixel in enumerate(transformed_pixels):
+        
+
+                #pt = Point()
+                #pt.x, pt.y, pt.z = float(x), float(y), float(z)
+                #new_pt = self.transform_point(t, pt)
+                #new_points.append((new_pt.x, new_pt.y, new_pt.z))
+                new_pt = Point()
             
-            tr_point = transformed_points[pixel_idx]
-            new_pt.x, new_pt.y, new_pt.z = float(tr_point[0]), float(tr_point[1]), float(tr_point[2])
+                tr_point = transformed_points[pixel_idx]
+                new_pt.x, new_pt.y, new_pt.z = float(tr_point[0]), float(tr_point[1]), float(tr_point[2])
             
-            if new_pt.z > 0:
-                #pixel = self.cam.project3dToPixel([new_pt.x, new_pt.y, new_pt.z])
+                if new_pt.z > 0:
+                    #pixel = self.cam.project3dToPixel([new_pt.x, new_pt.y, new_pt.z])
               
-                if (pixel[0] > 0 and pixel[0] < cv_image.shape[1]) and (pixel[1] > 0 and pixel[1] < cv_image.shape[0]):
-                    projected_pixels.append(pixel)
-                    projected_points.append(new_pt.z)
-                    camera_points.append([new_pt.x, new_pt.y])
+                    if (pixel[0] > 0 and pixel[0] < cv_image.shape[1]) and (pixel[1] > 0 and pixel[1] < cv_image.shape[0]):
+                        projected_pixels.append(pixel)
+                        projected_points.append(new_pt.z)
+                        camera_points.append([new_pt.x, new_pt.y])
                     
-                    #if pixel[0] > cv_image.shape[1]/2 -10 and pixel[0] < cv_image.shape[1]/2 +10 and pixel[1] > cv_image.shape[0]/2 -10 and pixel[1] < cv_image.shape[0]/2 +10:
-                    #    middle_point = [pixel, new_pt]
+                        #if pixel[0] > cv_image.shape[1]/2 -10 and pixel[0] < cv_image.shape[1]/2 +10 and pixel[1] > cv_image.shape[0]/2 -10 and pixel[1] < cv_image.shape[0]/2 +10:
+                        #    middle_point = [pixel, new_pt]
                         
 
-                    circles.append((int(pixel[0]),int(pixel[1])))
-                    circles_color.append(min(255,max(0,int(new_pt.z*100))))
-                    #color = tuple(cv2.applyColorMap(np.array([min(255,max(0,int(new_pt.z*100)))],dtype=np.uint8), cv2.COLORMAP_JET)[0][0].tolist())
+                        circles.append((int(pixel[0]),int(pixel[1])))
+                        circles_color.append(min(255,max(0,int(new_pt.z*100))))
+                        #color = tuple(cv2.applyColorMap(np.array([min(255,max(0,int(new_pt.z*100)))],dtype=np.uint8), cv2.COLORMAP_JET)[0][0].tolist())
                     
-                    #pdb.set_trace()
-                    #image_plot = cv2.circle(image_plot, (int(pixel[0]),int(pixel[1])), radius=1, color=color, thickness=-1)
+                        #pdb.set_trace()
+                        #image_plot = cv2.circle(image_plot, (int(pixel[0]),int(pixel[1])), radius=1, color=color, thickness=-1)
                     
-        #cv_image = cv2.circle(cv_image, (int(cv_image.shape[0]-1),int(cv_image.shape[1]-1)), radius=100, color=(255,255,255), thickness=-1)
-        #cv_image = cv2.circle(cv_image, (int(0)+1000,int(0)), radius=100, color=(255,255,255), thickness=-1)
-        #print(projected_points)
-        #pdb.set_trace()    
-        #print(projected_pixels)  
-        #cv2.imwrite("hello.jpg", cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB))
-        #quit()  
+            #cv_image = cv2.circle(cv_image, (int(cv_image.shape[0]-1),int(cv_image.shape[1]-1)), radius=100, color=(255,255,255), thickness=-1)
+            #cv_image = cv2.circle(cv_image, (int(0)+1000,int(0)), radius=100, color=(255,255,255), thickness=-1)
+            #print(projected_points)
+            #pdb.set_trace()    
+            #print(projected_pixels)  
+            #cv2.imwrite("hello.jpg", cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB))
+            #quit()  
         
-        circles_color_trans = cv2.applyColorMap(np.array(circles_color,dtype=np.uint8), cv2.COLORMAP_JET)
-        #pdb.set_trace()        
-        for c_idx in range(len(circles)):
-            image_plot = cv2.circle(image_plot, circles[c_idx], radius=1, color=circles_color_trans[c_idx][0].tolist(), thickness=-1)
+            circles_color_trans = cv2.applyColorMap(np.array(circles_color,dtype=np.uint8), cv2.COLORMAP_JET)
+            #pdb.set_trace()        
+            for c_idx in range(len(circles)):
+                image_plot = cv2.circle(image_plot, circles[c_idx], radius=1, color=circles_color_trans[c_idx][0].tolist(), thickness=-1)
         
-        time_taken = time.time() - time_start
-        self.get_logger().info(
-                f'Time taken2: {time_taken}')
+            time_taken = time.time() - time_start
+            self.get_logger().info(
+                    f'Time taken2: {time_taken}')
                 
-        points_to_world = []
-        for det in detection_array.detections:
-            det_point = [int(det.bbox.center.position.x), int(det.bbox.center.position.y+det.bbox.size_y/2)]
-            point_num = self.closest_node(det_point, projected_pixels)
-            distance = float(np.mean(np.array(projected_points)[point_num]))
-            #distance_vec = self.cam.projectPixelTo3dRay([int(det.bbox.center.position.x), int(det.bbox.center.position.y-det.bbox.size_y/2)])
-            image_plot = cv2.putText(image_plot, str(distance), det_point, cv2.FONT_HERSHEY_SIMPLEX, 
-                   1, (255,0,0), 2, cv2.LINE_AA)
+            points_to_world = []
+            for det in detection_array.detections:
+                det_point = [int(det.bbox.center.position.x), int(det.bbox.center.position.y+det.bbox.size_y/2)]
+                point_num = self.closest_node(det_point, projected_pixels)
+                distance = float(np.mean(np.array(projected_points)[point_num]))
+                #distance_vec = self.cam.projectPixelTo3dRay([int(det.bbox.center.position.x), int(det.bbox.center.position.y-det.bbox.size_y/2)])
+                image_plot = cv2.putText(image_plot, str(distance), det_point, cv2.FONT_HERSHEY_SIMPLEX, 
+                    1, (255,0,0), 2, cv2.LINE_AA)
             
 
-            points_to_world.append(np.array(self.cam.projectPixelTo3dRay(det_point))*distance)
+                points_to_world.append(np.array(self.cam.projectPixelTo3dRay(det_point))*distance)
         
-        points_to_world = np.array(points_to_world)
-        new_transformed_points = []
-        if points_to_world.size > 0:
-            points_to_world = np.hstack((points_to_world, np.atleast_2d(np.ones(points_to_world.shape[0])).T))
-            new_transformed_points = self.transform_point(toWorld, points_to_world)
+            points_to_world = np.array(points_to_world)
+            new_transformed_points = []
+            if points_to_world.size > 0:
+                points_to_world = np.hstack((points_to_world, np.atleast_2d(np.ones(points_to_world.shape[0])).T))
+                new_transformed_points = self.transform_point(toWorld, points_to_world)
         
-        markerArray = MarkerArray()
+            markerArray = MarkerArray()
         
-        #pdb.set_trace()
-        for newtp_idx,newtp in enumerate(new_transformed_points):
+            #pdb.set_trace()
+            for newtp_idx,newtp in enumerate(new_transformed_points):
         
-            marker = Marker()
-            marker.header.frame_id = "/map"
-            marker.type = marker.SPHERE
-            marker.action = marker.ADD
-            marker.scale.x = 0.2
-            marker.scale.y = 0.2
-            marker.scale.z = 0.2
+                marker = Marker()
+                marker.header.frame_id = "/map"
+                marker.type = marker.SPHERE
+                marker.action = marker.ADD
+                marker.scale.x = 0.2
+                marker.scale.y = 0.2
+                marker.scale.z = 0.2
             
-            if detection_array.detections[newtp_idx].results[0].hypothesis.class_id == "box":
-                marker.color.r = 1.0
-                marker.color.g = 1.0
-                marker.color.b = 0.0
-            else:
-                marker.color.r = 0.0
-                marker.color.g = 1.0
-                marker.color.b = 1.0
+                if detection_array.detections[newtp_idx].results[0].hypothesis.class_id == "box":
+                    marker.color.r = 1.0
+                    marker.color.g = 1.0
+                    marker.color.b = 0.0
+                else:
+                    marker.color.r = 0.0
+                    marker.color.g = 1.0
+                    marker.color.b = 1.0
             
-            marker.color.a = 1.0
+                marker.color.a = 1.0
             
-            marker.pose.orientation.w = 1.0
-            marker.pose.position.x = float(newtp[0])
-            marker.pose.position.y = float(newtp[1]) 
-            marker.pose.position.z = float(newtp[2])
-            marker.id = newtp_idx
-            marker.ns = "detected_objects"
+                marker.pose.orientation.w = 1.0
+                marker.pose.position.x = float(newtp[0])
+                marker.pose.position.y = float(newtp[1]) 
+                marker.pose.position.z = float(newtp[2])
+                marker.id = newtp_idx
+                marker.ns = "detected_objects"
             
-            markerArray.markers.append(marker) 
+                markerArray.markers.append(marker) 
             
             
-            detection_array.detections[newtp_idx].results[0].pose.pose.position.x = float(newtp[0])
-            detection_array.detections[newtp_idx].results[0].pose.pose.position.y = float(newtp[1])
-            detection_array.detections[newtp_idx].results[0].pose.pose.position.z = float(newtp[2])
-            detection_array.detections[newtp_idx].header.frame_id = "map"
+                detection_array.detections[newtp_idx].results[0].pose.pose.position.x = float(newtp[0])
+                detection_array.detections[newtp_idx].results[0].pose.pose.position.y = float(newtp[1])
+                detection_array.detections[newtp_idx].results[0].pose.pose.position.z = float(newtp[2])
+                detection_array.detections[newtp_idx].header.frame_id = "map"
             
-        self.marker_publisher.publish(markerArray)
+            self.marker_publisher.publish(markerArray)
         
-        if self.annotated_image_publisher is not None:
-            self.publish_annotated_image([], imageR.header, image_plot.transpose((2, 0, 1)))
+            if self.annotated_image_publisher is not None:
+                self.publish_annotated_image([], imageR.header, image_plot.transpose((2, 0, 1)))
         
         
-        self.detected_objects_publisher.publish(detection_array)
+            self.detected_objects_publisher.publish(detection_array)
         
-        time_taken = time.time() - time_start
-        self.get_logger().info(
-                f'Time taken3: {time_taken}')
+            time_taken = time.time() - time_start
+            self.get_logger().info(
+                    f'Time taken3: {time_taken}')
 
 
     def command_callback(self, msg):
