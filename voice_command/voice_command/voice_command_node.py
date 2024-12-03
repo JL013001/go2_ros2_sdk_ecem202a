@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 import speech_recognition as sr
 import json
 import re
@@ -11,6 +12,8 @@ from vosk import Model, KaldiRecognizer
 class VoiceCommandNode(Node):
     def __init__(self):
         super().__init__('voice_command_node')
+        self.publisher = self.create_publisher(String, 'command_topic', 10)
+
         self.model_path = "./vosk-model-small-en-us-0.15/"
         self.model = Model(self.model_path)
         self.recognizer = KaldiRecognizer(self.model, 16000)
@@ -70,6 +73,9 @@ class VoiceCommandNode(Node):
                 self.get_logger().info(f"Confirmation Text: {confirmation_text}")
 
                 if "yes" in confirmation_text:
+                    msg = String()
+                    msg.data = item
+                    self.publisher.publish(msg)
                     self.say(f"Heading to find the {item} now.")
                     self.say("Is this what you are looking for? Yes or no.")
                     self.awake = False  # Return to standby mode

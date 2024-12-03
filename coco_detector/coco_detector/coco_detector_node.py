@@ -10,11 +10,12 @@ import collections
 import numpy as np
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from vision_msgs.msg import BoundingBox2D, ObjectHypothesis, ObjectHypothesisWithPose
 from vision_msgs.msg import Detection2D, Detection2DArray
 from cv_bridge import CvBridge
-from ultralytics import YOLO
+from ultralytics import YOLOWorld
 import torch
 from torchvision.models import detection as detection_model
 from torchvision.utils import draw_bounding_boxes
@@ -84,8 +85,9 @@ class CocoDetectorNode(Node):
             #detection_model.FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.DEFAULT.meta["categories"]
         #self.model.eval()
         
-        self.model = YOLO("yolov8x.pt")
-        
+        self.model = None
+        self.model_initialized = False
+        #model.set_classes(["person", "bus"])
         
         self.get_logger().info("Node has started.")
         
@@ -108,6 +110,13 @@ class CocoDetectorNode(Node):
             PointCloud2,
             "/point_cloud2",
             self.point_callback,
+            qos_profile)
+
+        # subcription to the 'command_topic'
+        self.create_subscription(
+            String,  
+            "command_topic", 
+            self.command_callback, 
             qos_profile)
         
         self.tf_buffer = Buffer()
@@ -448,6 +457,21 @@ class CocoDetectorNode(Node):
         time_taken = time.time() - time_start
         self.get_logger().info(
                 f'Time taken3: {time_taken}')
+
+
+    def command_callback(self, msg):
+        if not self.model_initialized:
+            self.get_logger().info(f"Received command: {msg.data}")
+        
+            try:
+                self.model = YOLOWorld("yolov8s-world.pt") # Initialize the model
+                self.model.set_classes([msg.data])
+                self.model_initialized = True
+                self.get_logger().info("YOLO model initialized successfully.")
+            except Exception as e:
+                self.get_logger().error(f"Failed to initialize model: {e}")
+
+
 rclpy.init()
 coco_detector_node = CocoDetectorNode()
 rclpy.spin(coco_detector_node)
