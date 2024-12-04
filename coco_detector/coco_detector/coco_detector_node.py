@@ -112,7 +112,7 @@ class CocoDetectorNode(Node):
             self.point_callback,
             qos_profile)
 
-        subcription to the 'command_topic'
+        #subcription to the 'command_topic'
         self.create_subscription(
             String,  
             "command_topic", 
