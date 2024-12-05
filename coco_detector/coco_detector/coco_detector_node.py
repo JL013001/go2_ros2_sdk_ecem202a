@@ -87,7 +87,7 @@ class CocoDetectorNode(Node):
         
         self.model = None
         #self.model.set_classes(["person", "bus"])
-        self.model_initialized = False
+        #self.model_initialized = False
         
         self.get_logger().info("Node has started.")
         
@@ -463,16 +463,15 @@ class CocoDetectorNode(Node):
 
 
     def command_callback(self, msg):
-        if not self.model_initialized:
-            self.get_logger().info(f"Received command: {msg.data}")
-        
-            try:
-                self.model = YOLOWorld("yolov8s-worldv2.pt") # Initialize the model
-                self.model.set_classes([msg.data])
-                self.model_initialized = True
-                self.get_logger().info("YOLO model initialized successfully.")
-            except Exception as e:
-                self.get_logger().error(f"Failed to initialize model: {e}")
+        #if not self.model_initialized:
+        self.get_logger().info(f"Received command: {msg.data}")
+        try:
+            self.model = YOLOWorld("yolov8s-worldv2.pt") # Initialize the model
+            self.model.set_classes([msg.data])
+            self.model_initialized = True
+            self.get_logger().info("YOLO model initialized successfully.")
+        except Exception as e:
+            self.get_logger().error(f"Failed to initialize model: {e}")
 
 
 rclpy.init()
