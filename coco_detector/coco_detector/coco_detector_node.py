@@ -90,7 +90,7 @@ class CocoDetectorNode(Node):
         
         self.get_logger().info("Node has started.")
         
-        #camera_info_msg = self.yaml_to_CameraInfo("/root/ost.yaml")
+        camera_info_msg = self.yaml_to_CameraInfo("/root/ost.yaml")
         
         """
         imageR = message_filters.Subscriber(self, Image, "/go2_camera/color/image")
@@ -118,12 +118,12 @@ class CocoDetectorNode(Node):
             self.command_callback, 
             qos_profile)
         
-        # self.tf_buffer = Buffer()
-        # self.tf_listener = TransformListener(self.tf_buffer, self)
-        # self.cam = image_geometry.PinholeCameraModel()
-        # self.cam.fromCameraInfo(camera_info_msg)
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+        self.cam = image_geometry.PinholeCameraModel()
+        self.cam.fromCameraInfo(camera_info_msg)
         
-        # self.marker_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
+        self.marker_publisher = self.create_publisher(MarkerArray, "visualization_marker_array", 10)
 
     def mobilenet_to_ros2(self, detection, header):
         """Converts a Detection tuple(label, bbox, score) to a ROS2 Detection2D message."""
