@@ -106,12 +106,12 @@ class VoiceCommandNode(Node):
                     self.say("Hello. I am listening.")
                     self.awake = True
             else:
-                self.item = self.extract_item(text)
-                if self.item:
-                    self.say(f"Do you want me to find: {self.item}? Yes or no.")
-                    self.handle_confirmation()
+                item = self.extract_item(text)
+                if item:
+                    self.say(f"Do you want me to find: {item}? Yes or no.")
+                    self.handle_confirmation(item)
 
-    def handle_confirmation(self):
+    def handle_confirmation(self, item):
         while True:
             confirmation_data = self.stream.read(4000, exception_on_overflow=False)
             if self.recognizer.AcceptWaveform(confirmation_data):
@@ -121,7 +121,8 @@ class VoiceCommandNode(Node):
 
                 if "yes" in confirmation_text:
                     msg = String()
-                    msg.data = self.item
+                    msg.data = item
+                    self.item = item
                     self.publisher.publish(msg)
                     self.say(f"Heading to find the {self.item} now.")
                     self.searching = True
