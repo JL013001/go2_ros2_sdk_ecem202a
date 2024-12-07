@@ -59,9 +59,11 @@ class VoiceCommandNode(Node):
     def detected_object_callback(self, msg: Detection2DArray):
         if self.searching:
             for det in msg.detections:
-                print(det.results[0].hypothesis.class_id)
+                print(f"Item found: {det.results[0].hypothesis.class_id}")
+                print(f"Item to search for: {self.item}")
                 if det.results[0].hypothesis.class_id == self.item:
                     self.item_found = True
+                    self.searching = False
 
     def image_callback(self, msg: Image):
         if self.item_found:
@@ -77,6 +79,7 @@ class VoiceCommandNode(Node):
             except Exception as e:
                 print(f"Failed to save image: {e}")
             self.awake = True
+            self.item_found = False
 
     def say(self, text):
         self.get_logger().info(f"Saying: {text}")
