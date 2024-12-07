@@ -72,6 +72,8 @@ class CocoDetectorNode(Node):
             depth=1
         )
         
+        self.confirmed_object_publisher = \
+            self.create_publisher(String, 'confirmed_object_to_detect', 10)
         self.detected_objects_publisher = \
             self.create_publisher(Detection2DArray, "detected_objects", 10)
         if self.get_parameter('publish_annotated_image').get_parameter_value().bool_value:
@@ -114,7 +116,7 @@ class CocoDetectorNode(Node):
         #subcription to the 'command_topic'
         self.create_subscription(
             String,  
-            "command_topic", 
+            "object_to_detect", 
             self.command_callback, 
             qos_profile)
         
@@ -470,6 +472,9 @@ class CocoDetectorNode(Node):
                 self.model = YOLOWorld("yolov8s-world.pt") # Initialize the model
                 self.model.set_classes([msg.data])
                 self.model_initialized = True
+                confirm_item = String()
+                confirm_item.data = msg.data
+                self.confirmed_object_publisher.publish(confirm_item)
                 self.get_logger().info("YOLO model initialized successfully.")
             except Exception as e:
                 self.get_logger().error(f"Failed to initialize model: {e}")

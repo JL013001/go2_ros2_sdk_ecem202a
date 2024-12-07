@@ -16,7 +16,7 @@ import cv2
 class VoiceCommandNode(Node):
     def __init__(self):
         super().__init__('voice_command_node')
-        self.publisher = self.create_publisher(String, 'command_topic', 10)
+        self.publisher = self.create_publisher(String, 'object_to_detect', 10)
         self.detection_results = None
         self.searching = False
         self.item = None
