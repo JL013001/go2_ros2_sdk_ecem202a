@@ -59,6 +59,7 @@ class VoiceCommandNode(Node):
     def detected_object_callback(self, msg: Detection2DArray):
         if self.searching:
             for det in msg.detections:
+                print(det.results[0].hypothesis.class_id)
                 if det.results[0].hypothesis.class_id == self.item:
                     self.item_found = True
 
