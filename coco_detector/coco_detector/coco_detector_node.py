@@ -111,7 +111,7 @@ class CocoDetectorNode(Node):
             self.point_callback,
             qos_profile)
 
-        subcription to the 'command_topic'
+        #subcription to the 'command_topic'
         self.create_subscription(
             String,  
             "command_topic", 
@@ -463,6 +463,7 @@ class CocoDetectorNode(Node):
 
 
     def command_callback(self, msg):
+<<<<<<< HEAD
         if not self.model_initialized:
             self.get_logger().info(f"Received command: {msg.data}")
         
@@ -473,6 +474,17 @@ class CocoDetectorNode(Node):
                 self.get_logger().info("YOLO model initialized successfully.")
             except Exception as e:
                 self.get_logger().error(f"Failed to initialize model: {e}")
+=======
+        #if not self.model_initialized:
+        self.get_logger().info(f"Received command: {msg.data}")
+        try:
+            self.model = YOLOWorld("yolov8s-worldv2.pt") # Initialize the model
+            self.model.set_classes([msg.data])
+            self.model_initialized = True
+            self.get_logger().info("YOLO model initialized successfully.")
+        except Exception as e:
+            self.get_logger().error(f"Failed to initialize model: {e}")
+>>>>>>> 4bc38cc950e25b06646894ab8c6be3f09e63233c
 
 
 rclpy.init()
