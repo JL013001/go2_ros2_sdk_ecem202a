@@ -21,6 +21,7 @@ class VoiceCommandNode(Node):
         self.searching = False
         self.item = None
         self.item_found = False
+        self.bridge = CvBridge()
         # Create a subscription to the "detected_objects" topic
         self.image_detection_subscription = self.create_subscription(
             Detection2DArray,
